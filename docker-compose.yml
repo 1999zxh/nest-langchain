@@ -1,0 +1,89 @@
+# docker-compose.yml
+# 定义整个应用的所有服务
+
+
+
+services:
+
+  # ══════════════════════════════════════════════════
+  # 服务一：PostgreSQL 18 数据库
+  # ══════════════════════════════════════════════════
+  postgres:
+    image: postgres:18-alpine
+    container_name: nestjs_postgres
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    # 暴露 5433 端口（避免和本机已安装的 PostgreSQL 5432 端口冲突）
+    # 可以用 Navicat / DBeaver 连接 localhost:5433 直接查看数据
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - app-network
+    # 健康检查：确认 PostgreSQL 真正可以接受连接后，NestJS 才启动
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ══════════════════════════════════════════════════
+  # 服务二：NestJS 应用
+  # ══════════════════════════════════════════════════
+  nestjs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nestjs_app
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  # ══════════════════════════════════════════════════
+  # 服务三：Nginx 反向代理
+  # ══════════════════════════════════════════════════
+  nginx:
+    image: nginx:alpine
+    container_name: nestjs_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - nestjs
+    networks:
+      - app-network
+
+# ══════════════════════════════════════════════════════
+# 数据卷：持久化 PostgreSQL 数据
+# 容器删除后数据不会丢失
+# ══════════════════════════════════════════════════════
+volumes:
+  postgres_data:
+    driver: local
+
+# ══════════════════════════════════════════════════════
+# 网络：容器间内部通信
+# 同一网络里的容器可以用服务名互相访问
+# NestJS 连 PostgreSQL 用 postgres:5432（不是 localhost:5432）
+# ══════════════════════════════════════════════════════
+networks:
+  app-network:
+    driver: bridge
