@@ -8,6 +8,14 @@ import { OrderService } from './order/order.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { PostModule } from './post/post.module';
 import { ConfigModule } from '@nestjs/config';
+import { ModelsModule } from './models/models.module';
+import { PromptsModule } from './prompts/prompts.module';
+import { ChainsModule } from './chains/chains.module';
+import { AgentsModule } from './agents/agents.module';
+import { MemoryModule } from './memory/memory.module';
+import { RagModule } from './rag/rag.module';
+import { FunctionCallingModule } from './function-calling/function-calling.module';
+import { RagDbModule } from './rag-db/rag-db.module';
 
 @Module({
   imports: [
@@ -17,6 +25,14 @@ import { ConfigModule } from '@nestjs/config';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ModelsModule,
+    PromptsModule,
+    ChainsModule,
+    AgentsModule,
+    MemoryModule,
+    RagModule,
+    FunctionCallingModule,
+    RagDbModule,
   ],
   controllers: [AppController, UserController],
   providers: [AppService, UserService, OrderService],
