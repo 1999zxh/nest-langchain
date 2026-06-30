@@ -9,9 +9,13 @@ import { SupervisorService } from './supervisor.service';
 import { PipelineService } from './pipeline.service';
 import { CodeReviewService } from './code-review.service';
 import { EmailApprovalService } from './email-approval.service';
+import { TechResearchController } from './tech-research/tech-research.controller';
+import { TechResearchService } from './tech-research/tech-research.service';
+import { TechResearchModule } from './tech-research/tech-research.module';
 
 @Module({
-  controllers: [LanggraphController],
-  providers: [LanggraphService, ArticleService, ReactAgentService, RoutingService, ParallelService, SupervisorService, PipelineService, CodeReviewService, EmailApprovalService]
+  controllers: [LanggraphController, TechResearchController],
+  providers: [LanggraphService, ArticleService, ReactAgentService, RoutingService, ParallelService, SupervisorService, PipelineService, CodeReviewService, EmailApprovalService, TechResearchService],
+  imports: [TechResearchModule]
 })
 export class LanggraphModule { }
